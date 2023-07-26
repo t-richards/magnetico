@@ -18,12 +18,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not open the database %s. %v", DatabasePath, err)
 	}
+	defer database.Close()
 
 	// run the crawler in the background
+	// TODO(tom): Fix this
 	// crawler.Run(database)
 
 	// launch the web service
 	serve.Run(database)
-
-	log.Println("Hello, world!")
 }
