@@ -1,0 +1,72 @@
+name: go
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Setup go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.20.6
+
+    - name: Build app
+      env:
+        GOFLAGS: "-trimpath -mod=readonly -modcacherw"
+        CGO_ENABLED: 0
+      run: |
+        go mod verify
+        go build
+
+    - name: Show module versions
+      run: go version -m magnetico
+
+    - name: Generate SBOM
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh ext install advanced-security/gh-sbom
+        gh sbom -l
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Setup go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.20.6
+
+    - name: Run tests
+      run: |
+        mkdir -p coverage
+        go test -race -coverpkg=./... -covermode=atomic -coverprofile coverage/cover.out -v ./...
+        go tool cover -html=coverage/cover.out -o coverage/index.html
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: coverage/cover.out
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+
+    - name: Setup go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.20.6
+        cache: false
+
+    - name: Lint code
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: v1.53.3

@@ -1,14 +1,14 @@
 # magnetico
+
 *Autonomous (self-hosted) BitTorrent DHT search engine suite.*
 
-![Flow of Operations](/doc/operations.svg)
+This is a hard fork of the original magnetico project, with some opinionated changes.
 
-magnetico is the first autonomous (self-hosted) BitTorrent DHT search engine suite that is *designed for end-users*. The suite consists of two packages:
+## About
 
-- **magneticod:** is the daemon that crawls the BitTorrent DHT network in the background to discover info hashes and fetches metadata from the peers.
-- **magneticow:** is a lightweight web interface to search and to browse the torrents that its counterpart discovered.
+**magnetico** is an autonomous (self-hosted) BitTorrent DHT search engine suite that is *designed for end-users*. It crawls the BitTorrent DHT network in the background to discover info hashes and fetch metadata from peers. It also provides a lightweight web interface to search and browse discovered torrents.
 
-Both programs, combined together, allows anyone with a decent Internet connection to access the vast amount of torrents waiting to be discovered within the BitTorrent DHT space, *without relying on any central entity*.
+This program allows anyone with a decent Internet connection to access the vast amount of torrents waiting to be discovered within the BitTorrent DHT space, *without relying on any central entity*.
 
 **magnetico** liberates BitTorrent from the yoke of centralised trackers & web-sites and makes it
 *truly decentralised*. Finally!
@@ -16,44 +16,39 @@ Both programs, combined together, allows anyone with a decent Internet connectio
 ## Features
 
 Easy installation & minimal requirements:
-  - Easy to build golang static binaries.
-  - Root access is *not* required to install or to use.
+ - We provide pre-compiled static binaries for most platforms.
+ - The application runs without root or admin privileges.
 
-### Magneticod
+## Installation
 
-**magneticod** trawls the BitTorrent DHT by "going" from one node to another, and fetches the metadata using the nodes without using trackers. No reliance on any centralised entity!
+Download the latest release from the [releases page](https://github.com/t-richards/magnetico/releases).
 
-Unlike client-server model that web applications use, P2P networks are *chaotic* and **magneticod** is designed to handle all the operational errors accordingly.
+## Changes from the original project
 
-High performance implementation in Go: **magneticod** utilizes every bit of your resources to discover as many infohashes & metadata as possible.
+ - Updated the code for modern Go, making it easier to build and run.
+ - Replaced multiple database interfaces with the one true database: SQLite.
+ - Removed the JavaScript, because it is ugly and unnecessary.
+ - Removed API routes, as they will not be used.
+ - Merged the crawler and web server into a single binary.
+ - Many bugfixes and code quality-of-life improvements.
 
-### Magneticow
+## Roadmap
 
-**magneticow** features a lightweight web interface to help you access the database without getting on your way.
-
-If you'd like to password-protect the access to **magneticow**, you need to store the credentials
-in file. The `credentials` file must consist of lines of the following format: `<USERNAME>:<BCRYPT HASH>`.
-
-- `<USERNAME>` must start with a small-case (`[a-z]`) ASCII character, might contain non-consecutive underscores except at the end, and consists of small-case a-z characters and digits 0-9.
-- `<BCRYPT HASH>` is the output of the well-known bcrypt function.
-
-You can use `htpasswd` (part of `apache2-utils` on Ubuntu) to create lines:
-
-```
-$  htpasswd -bnBC 12 "USERNAME" "PASSWORD"
-USERNAME:$2y$12$YE01LZ8jrbQbx6c0s2hdZO71dSjn2p/O9XsYJpz.5968yCysUgiaG
-```
-
-### Screenshots
-
-| ![The Homepage](/doc/homepage.png) | ![Searching for torrents](/doc/search.png) | ![Search result](/doc/result.png) |
-|:-------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------:|
-|                                                                     __The Homepage__                                                                    |                                                                     __Searching for torrents__                                                                    |                                                     __Viewing the metadata of a torrent__                                                     |
+ - [ ] Fix database code
+   - [ ] Instant corruption when applying schema
+   - [ ] Analyze and flatten migrations
+   - [ ] Maybe add an ORM?
+ - [ ] Replace client-side handlebars templates with go templates
 
 ## Why?
+
 BitTorrent, being a distributed P2P file sharing protocol, has long suffered because of the
 centralised entities that people depended on for searching torrents (websites) and for discovering
 other peers (trackers). Introduction of DHT (distributed hash table) eliminated the need for
 trackers, allowing peers to discover each other through other peers and to fetch metadata from the
 leechers & seeders in the network. **magnetico** is the finishing move that allows users to search
 for torrents in the network, hence removing the need for centralised torrent websites.
+
+## License
+
+magnetico is licensed under the [GNU AGPLv3](./COPYING).

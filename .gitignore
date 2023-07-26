@@ -1,2 +1,8 @@
-cmd/magneticod/magneticod
-cmd/magneticow/magneticow
+# Compiled binaries
+cmd/magnetico/magnetico
+__debug_bin
+
+# Databases
+*.db
+data/*
+!data/.gitkeep
