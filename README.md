@@ -34,12 +34,12 @@ Download the latest release from the [releases page](https://github.com/t-richar
 
 ## Roadmap
 
- - [ ] Fix database code
-   - [ ] Instant corruption when applying schema
-   - [ ] Analyze and flatten migrations
+ - [x] Fix database code
+   - [x] Instant corruption when applying schema
+   - [x] Analyze and flatten migrations
    - [ ] Maybe add an ORM?
  - [ ] Replace client-side handlebars templates with go templates
- - [ ] Add noindex headers
+ - [x] Add robots noindex/nofollow headers
 
 ## Why?
 

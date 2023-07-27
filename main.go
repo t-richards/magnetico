@@ -25,9 +25,9 @@ func main() {
 		}
 	}()
 
-	// run the crawler in the background
-	go crawler.Run(database)
+	// launch the web service in the background
+	go serve.Run(database)
 
-	// launch the web service
-	serve.Run(database)
+	// run the crawler with primary interrupt handling logic
+	crawler.Run(database)
 }

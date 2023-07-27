@@ -26,6 +26,7 @@ const (
 func Run(database persistence.Database) {
 	// Main application routes
 	router := chi.NewRouter()
+	router.Use(noIndex)
 	router.Get("/", rootHandler(database))
 	router.Get("/favicon.ico", emptyFaviconHandler)
 	router.Get("/torrents", torrentsHandler(database))
@@ -86,4 +87,11 @@ func mustAsset(name string) []byte {
 		return nil
 	}
 	return data
+}
+
+func noIndex(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Robots-Tag", "noindex, nofollow")
+		next.ServeHTTP(w, r)
+	})
 }
