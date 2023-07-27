@@ -245,9 +245,9 @@ func (db *sqlite3Database) QueryTorrents(
 			WHERE torrents_idx MATCH ?
 		) AS idx USING(id)
 	{{ end }}
-		WHERE     updated_at <= ?
+		WHERE updated_at <= ?
 	{{ if not .FirstPage }}
-			  AND ( {{.OrderOn}}, id ) {{GTEorLTE .Ascending}} (?, ?) -- https://www.sqlite.org/rowvalue.html#row_value_comparisons
+		AND ( {{.OrderOn}}, id ) {{GTEorLTE .Ascending}} (?, ?) {{/* https://www.sqlite.org/rowvalue.html#row_value_comparisons */}}
 	{{ end }}
 		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}, id {{AscOrDesc .Ascending}}
 		LIMIT ?;	
@@ -344,16 +344,17 @@ func (db *sqlite3Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error)
 			name,
 			total_size,
 			created_at,
-			updated_at
+			updated_at,
 			(SELECT COUNT(*) FROM files WHERE torrent_id = torrents.id) AS n_files
 		FROM torrents
 		WHERE info_hash = ?`,
 		infoHash,
 	)
-	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}
+
+	defer closeRows(rows)
 
 	if !rows.Next() {
 		return nil, nil

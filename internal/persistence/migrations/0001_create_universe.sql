@@ -6,15 +6,12 @@ CREATE TABLE torrents (
     name TEXT NOT NULL,
     total_size INTEGER NOT NULL,
 
-    -- Stats.
-    seeder_count INTEGER NOT NULL DEFAULT 0,
-    leecher_count INTEGER NOT NULL DEFAULT 0,
-
     -- Timestamps.
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
 
+-- Optimize lookups for torrents by info hash.
 CREATE UNIQUE INDEX info_hash_index ON torrents (info_hash);
 
 -- Create the files table.
@@ -24,10 +21,7 @@ CREATE TABLE files (
     torrent_id INTEGER REFERENCES torrents ON DELETE CASCADE ON UPDATE RESTRICT,
     size INTEGER NOT NULL,
     path TEXT NOT NULL,
-
-    -- Readme file.
-    is_readme INTEGER DEFAULT NULL,
-    readme_content TEXT DEFAULT NULL
 );
 
-CREATE UNIQUE INDEX readme_index ON files (torrent_id, is_readme);
+-- Optimize lookups for files by torrent ID.
+CREATE INDEX files_torrent_id_index ON files (torrent_id);

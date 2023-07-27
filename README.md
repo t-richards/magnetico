@@ -4,6 +4,10 @@
 
 This is a hard fork of the original magnetico project, with some opinionated changes.
 
+> [!IMPORTANT]\
+> This project is a work in progress.
+> It does not intend to be a drop-in replacement for the original magnetico.
+
 ## About
 
 **magnetico** is an autonomous (self-hosted) BitTorrent DHT search engine suite that is *designed for end-users*. It crawls the BitTorrent DHT network in the background to discover info hashes and fetch metadata from peers. It also provides a lightweight web interface to search and browse discovered torrents.
@@ -37,10 +41,13 @@ Download the latest release from the [releases page](https://github.com/t-richar
  - [x] Fix database code
    - [x] Instant corruption when applying schema
    - [x] Analyze and flatten migrations
-   - [ ] Maybe add an ORM?
- - [ ] Replace client-side handlebars templates with go templates
- - [ ] Fix pagination
+   - [ ] Maybe replace hand-rolled queries with an ORM?
+ - [x] Replace client-side handlebars templates with go templates
  - [x] Add robots noindex/nofollow headers
+ - [ ] Fix pagination
+ - [ ] Pretty up the files list
+ - [ ] Fix crawler code
+   - [ ] `Could NOT write an UDP packet! invalid argument`
  - [ ] Automate docker image building
  - [ ] Windows support? (PRs welcome)
 

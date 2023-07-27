@@ -1,11 +1,14 @@
 package serve
 
 import (
+	"encoding/hex"
 	"errors"
 	"log"
 	"net/http"
+	"text/template"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/t-richards/magnetico/internal/persistence"
 )
 
@@ -15,6 +18,8 @@ type homepageData struct {
 }
 
 func rootHandler(database persistence.Database) http.HandlerFunc {
+	homepageTemplate := template.Must(template.New("homepage").Funcs(templateFunctions).Parse(mustTemplate("templates/homepage.html")))
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		nTorrents, err := database.GetNumberOfTorrents()
 		if err != nil {
@@ -22,7 +27,7 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		err = templates["homepage"].Execute(w, homepageData{
+		err = homepageTemplate.Execute(w, homepageData{
 			NTorrents: nTorrents,
 		})
 		if err != nil {
@@ -38,6 +43,8 @@ type torrentsData struct {
 }
 
 func torrentsHandler(database persistence.Database) http.HandlerFunc {
+	listTemplate := template.Must(template.New("torrent").Funcs(templateFunctions).Parse(mustTemplate("templates/torrents.html")))
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		lastId := 0.0
 		lastVal := uint64(0)
@@ -48,7 +55,7 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 			time.Now().Unix(),
 			persistence.ByDiscoveredOn,
 			true,
-			100,
+			15,
 			&lastId,
 			&lastVal,
 		)
@@ -57,7 +64,7 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		err = templates["torrents"].Execute(w, torrentsData{
+		err = listTemplate.Execute(w, torrentsData{
 			Torrents: metadata,
 			Query:    r.FormValue("query"),
 		})
@@ -67,10 +74,49 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 	}
 }
 
-func torrentsInfohashHandler(w http.ResponseWriter, r *http.Request) {
-	data := mustAsset("templates/torrent.html")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = w.Write(data)
+type torrentData struct {
+	Torrent persistence.TorrentMetadata
+	Files   []persistence.File
+	Query   string
+}
+
+func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
+	infoTemplate := template.Must(template.New("torrent").Funcs(templateFunctions).Parse(mustTemplate("templates/torrent.html")))
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		infohash := chi.URLParam(r, "infohash")
+		hashBytes, err := hex.DecodeString(infohash)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		metadata, err := database.GetTorrent(hashBytes)
+		if err != nil {
+			log.Printf("while fetching torrent: %v\n", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		if metadata == nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		files, err := database.GetFiles(hashBytes)
+		if err != nil {
+			log.Printf("while fetching files: %v\n", err)
+		}
+
+		err = infoTemplate.Execute(w, torrentData{
+			Torrent: *metadata,
+			Files:   files,
+			Query:   r.FormValue("query"),
+		})
+		if err != nil {
+			log.Printf("while executing torrent template: %v", err)
+		}
+	}
 }
 
 func handlerError(err error, w http.ResponseWriter) {
