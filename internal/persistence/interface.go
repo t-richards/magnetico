@@ -1,6 +1,7 @@
 package persistence
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -16,7 +17,7 @@ type Database interface {
 
 	// GetNumberOfTorrents returns the number of torrents saved in the database. Might be an
 	// approximation.
-	GetNumberOfTorrents() (uint, error)
+	GetNumberOfTorrents(context.Context) (uint, error)
 	// QueryTorrents returns @pageSize amount of torrents,
 	// * that are discovered before @discoveredOnBefore
 	// * that match the @query if it's not empty, else all torrents

@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"embed" // Required to use embed.FS
 	"errors"
@@ -177,30 +178,23 @@ func (db *sqlite3Database) Close() error {
 	return db.conn.Close()
 }
 
-func (db *sqlite3Database) GetNumberOfTorrents() (uint, error) {
-	// COUNT(1) is much more inefficient since it scans the whole table, so use MAX(ROWID).
-	// Keep in mind that the value returned by GetNumberOfTorrents() might be an approximation.
-	rows, err := db.conn.Query("SELECT MAX(ROWID) FROM torrents;")
+// Returns an approximate number of torrents in the database.
+func (db *sqlite3Database) GetNumberOfTorrents(ctx context.Context) (uint, error) {
+	var n uint
+
+	// Note that SELECT COUNT(1) is less efficient than asking for the maximum ROWID:
+	//
+	// sqlite> EXPLAIN QUERY PLAN SELECT COUNT(1) FROM torrents;
+	// `--SCAN torrents USING COVERING INDEX info_hash_index
+	// sqlite> EXPLAIN QUERY PLAN SELECT MAX(ROWID) FROM torrents;
+	// `--SEARCH torrents
+	//
+	err := db.conn.QueryRowContext(ctx, "SELECT MAX(ROWID) FROM torrents;").Scan(&n)
 	if err != nil {
 		return 0, err
 	}
-	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, fmt.Errorf("no rows returned from `SELECT MAX(ROWID)`")
-	}
-
-	var n *uint
-	if err = rows.Scan(&n); err != nil {
-		return 0, err
-	}
-
-	// If the database is empty (i.e. 0 entries in 'torrents') then the query will return nil.
-	if n == nil {
-		return 0, nil
-	} else {
-		return *n, nil
-	}
+	return n, nil
 }
 
 func (db *sqlite3Database) QueryTorrents(
@@ -291,10 +285,10 @@ func (db *sqlite3Database) QueryTorrents(
 	queryArgs = append(queryArgs, limit)
 
 	rows, err := db.conn.Query(sqlQuery, queryArgs...)
-	defer closeRows(rows)
 	if err != nil {
 		return nil, errors.New("query error " + err.Error())
 	}
+	defer closeRows(rows)
 
 	torrents := make([]TorrentMetadata, 0)
 	for rows.Next() {
@@ -372,10 +366,10 @@ func (db *sqlite3Database) GetFiles(infoHash []byte) ([]File, error) {
 	rows, err := db.conn.Query(
 		"SELECT size, path FROM files, torrents WHERE files.torrent_id = torrents.id AND torrents.info_hash = ?;",
 		infoHash)
-	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}
+	defer closeRows(rows)
 
 	var files []File
 	for rows.Next() {

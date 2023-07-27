@@ -41,9 +41,11 @@
             </div>
             <div class="card-footer">
                 <small class="text-body-secondary">
-                    {{ .Size | humanizeSize }} |
-                    <span title="Discovered at {{ .CreatedAt | unixTimeToString }}">{{ .CreatedAt | humanizeTime
-                        }}</span>
+                    {{ .NFiles | comma }} files |
+                    <span title="{{ .Size }} bytes">{{ .Size | humanizeSize }}</span> |
+                    <span title="Discovered at {{ .CreatedAt | unixTimeToString }}">
+                        {{ .CreatedAt | humanizeTime }}
+                    </span>
                 </small>
             </div>
         </div>

@@ -41,6 +41,7 @@ Download the latest release from the [releases page](https://github.com/t-richar
  - [x] Fix database code
    - [x] Instant corruption when applying schema
    - [x] Analyze and flatten migrations
+   - [ ] Fix rows erroneously being closed early
    - [ ] Maybe replace hand-rolled queries with an ORM?
  - [x] Replace client-side handlebars templates with go templates
  - [x] Add robots noindex/nofollow headers

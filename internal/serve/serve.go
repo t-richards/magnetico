@@ -14,6 +14,9 @@ import (
 	"github.com/t-richards/magnetico/internal/persistence"
 )
 
+//go:embed static/*
+var static embed.FS
+
 //go:embed templates/*
 var fs embed.FS
 
@@ -57,7 +60,8 @@ const (
 func Run(database persistence.Database) {
 	// Main application routes
 	router := chi.NewRouter()
-	router.Use(noIndex)
+	router.Use(securityHeaders)
+	router.Get("/static/*", staticHandler)
 	router.Get("/", rootHandler(database))
 	router.Get("/favicon.ico", emptyFaviconHandler)
 	router.Get("/torrents", torrentsHandler(database))
@@ -76,11 +80,4 @@ func mustTemplate(name string) string {
 		log.Panic(err)
 	}
 	return string(data)
-}
-
-func noIndex(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Robots-Tag", "noindex, nofollow")
-		next.ServeHTTP(w, r)
-	})
 }
