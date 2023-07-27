@@ -24,6 +24,7 @@ COPY --from=builder /go/src/app/magnetico /bin/magnetico
 
 # Runner image
 FROM scratch AS runner
+LABEL maintainer="magnetico@tomrichards.net"
 COPY --from=root / /
 EXPOSE 8080/tcp
 WORKDIR /data

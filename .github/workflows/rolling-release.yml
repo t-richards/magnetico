@@ -22,12 +22,10 @@ jobs:
           CGO_ENABLED: "0"
           GOFLAGS: "-trimpath -mod=readonly -modcacherw"
         run: |
-          GOOS=linux   GOARCH=amd64 go build -o "magnetico-linux-amd64"       -ldflags "-s -w"
-          GOOS=linux   GOARCH=arm64 go build -o "magnetico-linux-arm64"       -ldflags "-s -w"
-          GOOS=darwin  GOARCH=amd64 go build -o "magnetico-darwin-amd64"      -ldflags "-s -w"
-          GOOS=darwin  GOARCH=arm64 go build -o "magnetico-darwin-arm64"      -ldflags "-s -w"
-          GOOS=windows GOARCH=amd64 go build -o "magnetico-windows-amd64.exe" -ldflags "-s -w"
-          GOOS=windows GOARCH=arm64 go build -o "magnetico-windows-arm64.exe" -ldflags "-s -w"
+          GOOS=linux   GOARCH=amd64 go build -o "magnetico-linux-amd64"  -ldflags "-s -w"
+          GOOS=linux   GOARCH=arm64 go build -o "magnetico-linux-arm64"  -ldflags "-s -w"
+          GOOS=darwin  GOARCH=amd64 go build -o "magnetico-darwin-amd64" -ldflags "-s -w"
+          GOOS=darwin  GOARCH=arm64 go build -o "magnetico-darwin-arm64" -ldflags "-s -w"
       - name: Create release with binary assets
         env:
           GH_TOKEN: ${{ github.token }}

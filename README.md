@@ -16,7 +16,7 @@ This program allows anyone with a decent Internet connection to access the vast 
 ## Features
 
 Easy installation & minimal requirements:
- - We provide pre-compiled static binaries for most platforms.
+ - We provide pre-compiled static binaries for most platforms (currently macOS + Linux).
  - The application runs without root or admin privileges.
 
 ## Installation
@@ -40,6 +40,8 @@ Download the latest release from the [releases page](https://github.com/t-richar
    - [ ] Maybe add an ORM?
  - [ ] Replace client-side handlebars templates with go templates
  - [x] Add robots noindex/nofollow headers
+ - [ ] Automate docker image building
+ - [ ] Windows support? (PRs welcome)
 
 ## Why?
 
