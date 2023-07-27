@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 
 <head>
     <meta charset="utf-8">
@@ -10,10 +10,12 @@
 </head>
 
 <body>
-    <header>
-        <div><a href="/"><b>magnetico</b></a></div>
-        <form action="/torrents" method="get" autocomplete="off" role="search">
-            <input class="form-control" type="search" name="query" placeholder="Search the BitTorrent DHT">
+    <header class="mb-4 p-3 d-flex align-items-center justify-content-start">
+        <h1><a href="/" class="text-body text-decoration-none">magnetico</a></h1>
+        <form class="ms-4">
+            <div class="input-group">
+                <input type="text" class="form-control" name="query" placeholder="Search the BitTorrent DHT" aria-label="Search the BitTorrent DHT" value="{{ .Query }}">
+            </div>
         </form>
     </header>
     <main>

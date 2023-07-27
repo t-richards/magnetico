@@ -39,6 +39,7 @@ Download the latest release from the [releases page](https://github.com/t-richar
    - [ ] Analyze and flatten migrations
    - [ ] Maybe add an ORM?
  - [ ] Replace client-side handlebars templates with go templates
+ - [ ] Add noindex headers
 
 ## Why?
 

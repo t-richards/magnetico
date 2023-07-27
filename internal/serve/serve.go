@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/t-richards/magnetico/internal/persistence"
 )
@@ -24,13 +24,12 @@ const (
 )
 
 func Run(database persistence.Database) {
-
 	// Main application routes
-	router := mux.NewRouter()
-	router.HandleFunc("/", rootHandler(database))
-	router.HandleFunc("/favicon.ico", emptyFaviconHandler)
-	router.HandleFunc("/torrents", torrentsHandler(database))
-	router.HandleFunc("/torrents/{infohash:[a-f0-9]{40}}", torrentsInfohashHandler)
+	router := chi.NewRouter()
+	router.Get("/", rootHandler(database))
+	router.Get("/favicon.ico", emptyFaviconHandler)
+	router.Get("/torrents", torrentsHandler(database))
+	router.Get("/torrents/{infohash:[a-f0-9]{40}}", torrentsInfohashHandler)
 
 	templateFunctions := template.FuncMap{
 		"add": func(augend int, addends int) int {

@@ -8,6 +8,10 @@ import (
 )
 
 // Homepage.
+type homepageData struct {
+	NTorrents uint
+}
+
 func rootHandler(database persistence.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nTorrents, err := database.GetNumberOfTorrents()
@@ -16,12 +20,16 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		_ = templates["homepage"].Execute(w, struct {
-			NTorrents uint
-		}{
+		_ = templates["homepage"].Execute(w, homepageData{
 			NTorrents: nTorrents,
 		})
 	}
+}
+
+// Torrents search page
+type torrentsData struct {
+	Torrents []persistence.TorrentMetadata
+	Query    string
 }
 
 func torrentsHandler(database persistence.Database) http.HandlerFunc {
@@ -44,10 +52,9 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		_ = templates["homepage"].Execute(w, struct {
-			Torrents []persistence.TorrentMetadata
-		}{
+		_ = templates["torrents"].Execute(w, torrentsData{
 			Torrents: metadata,
+			Query:    r.FormValue("query"),
 		})
 	}
 }

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/anacrolix/torrent v1.52.4
 	github.com/dustin/go-humanize v1.0.1
-	github.com/gorilla/mux v1.8.0
+	github.com/go-chi/chi/v5 v5.0.10
 	github.com/willf/bloom v2.0.3+incompatible
 	golang.org/x/sys v0.10.0
 	modernc.org/sqlite v1.24.0
