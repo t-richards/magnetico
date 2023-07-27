@@ -2,7 +2,9 @@ package serve
 
 import (
 	"errors"
+	"log"
 	"net/http"
+	"time"
 
 	"github.com/t-richards/magnetico/internal/persistence"
 )
@@ -20,9 +22,12 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		_ = templates["homepage"].Execute(w, homepageData{
+		err = templates["homepage"].Execute(w, homepageData{
 			NTorrents: nTorrents,
 		})
+		if err != nil {
+			log.Printf("while executing homepage template: %v", err)
+		}
 	}
 }
 
@@ -39,8 +44,8 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 		_ = r.ParseForm()
 
 		metadata, err := database.QueryTorrents(
-			r.Form.Get("query"),
-			0,
+			r.FormValue("query"),
+			time.Now().Unix(),
 			persistence.ByDiscoveredOn,
 			true,
 			100,
@@ -52,10 +57,13 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		_ = templates["torrents"].Execute(w, torrentsData{
+		err = templates["torrents"].Execute(w, torrentsData{
 			Torrents: metadata,
 			Query:    r.FormValue("query"),
 		})
+		if err != nil {
+			log.Printf("while executing torrents template: %v", err)
+		}
 	}
 }
 

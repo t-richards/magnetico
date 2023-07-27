@@ -41,28 +41,16 @@ func Run(database persistence.Database) {
 			return minuend - subtrahend
 		},
 
-		"bytesToHex": hex.EncodeToString,
+		"hex": hex.EncodeToString,
 
-		"unixTimeToYearMonthDay": func(s int64) string {
+		"humanizeUnixTimestamp": func(s int64) string {
 			tm := time.Unix(s, 0)
-			// > Format and Parse use example-based layouts. Usually you’ll use a constant from time
-			// > for these layouts, but you can also supply custom layouts. Layouts must use the
-			// > reference time Mon Jan 2 15:04:05 MST 2006 to show the pattern with which to
-			// > format/parse a given time/string. The example time must be exactly as shown: the
-			// > year 2006, 15 for the hour, Monday for the day of the week, etc.
+			// > Format and Parse use a reference time for specifying the format.
 			// https://gobyexample.com/time-formatting-parsing
-			// Why you gotta be so weird Go?
-			return tm.Format("02/01/2006")
+			return tm.Format("2006-01-02")
 		},
 
 		"humanizeSize": humanize.IBytes,
-
-		"humanizeSizeF": func(s int64) string {
-			if s < 0 {
-				return ""
-			}
-			return humanize.IBytes(uint64(s))
-		},
 
 		"comma": func(s uint) string {
 			return humanize.Comma(int64(s))

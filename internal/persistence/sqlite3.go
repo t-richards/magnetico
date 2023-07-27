@@ -304,7 +304,8 @@ func (db *sqlite3Database) QueryTorrents(
 			&torrent.InfoHash,
 			&torrent.Name,
 			&torrent.Size,
-			&torrent.DiscoveredOn,
+			&torrent.CreatedAt,
+			&torrent.UpdatedAt,
 			&torrent.NFiles,
 			&torrent.Relevance,
 		)
@@ -359,7 +360,7 @@ func (db *sqlite3Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error)
 	}
 
 	var tm TorrentMetadata
-	if err = rows.Scan(&tm.InfoHash, &tm.Name, &tm.Size, &tm.DiscoveredOn, &tm.NFiles); err != nil {
+	if err = rows.Scan(&tm.InfoHash, &tm.Name, &tm.Size, &tm.CreatedAt, &tm.UpdatedAt, &tm.NFiles); err != nil {
 		return nil, err
 	}
 

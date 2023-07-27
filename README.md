@@ -39,6 +39,7 @@ Download the latest release from the [releases page](https://github.com/t-richar
    - [x] Analyze and flatten migrations
    - [ ] Maybe add an ORM?
  - [ ] Replace client-side handlebars templates with go templates
+ - [ ] Fix pagination
  - [x] Add robots noindex/nofollow headers
  - [ ] Automate docker image building
  - [ ] Windows support? (PRs welcome)
