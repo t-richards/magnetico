@@ -4,6 +4,7 @@ package main
 import (
 	"log"
 
+	"github.com/t-richards/magnetico/internal/crawler"
 	"github.com/t-richards/magnetico/internal/persistence"
 	"github.com/t-richards/magnetico/internal/serve"
 )
@@ -18,11 +19,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not open the database %s. %v", DatabasePath, err)
 	}
-	defer database.Close()
+	defer func() {
+		if err := database.Close(); err != nil {
+			log.Printf("Could not close database! %v", err)
+		}
+	}()
 
 	// run the crawler in the background
-	// TODO(tom): Fix this
-	// crawler.Run(database)
+	go crawler.Run(database)
 
 	// launch the web service
 	serve.Run(database)

@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if ! command -v pkgsite > /dev/null 2>&1; then
+    echo "pkgsite not found in PATH, installing..."
+    go install golang.org/x/pkgsite/cmd/pkgsite@latest
+fi
+
+exec pkgsite "$@"

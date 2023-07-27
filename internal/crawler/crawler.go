@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/t-richards/magnetico/internal/dht"
@@ -22,7 +23,7 @@ type crawlerOpts struct {
 func Run(database persistence.Database) {
 	// Hardcoded options for now.
 	opts := crawlerOpts{
-		IndexerAddrs:        []string{"0.0.0.0"},
+		IndexerAddrs:        []string{"0.0.0.0:0"},
 		IndexerInterval:     1 * time.Second,
 		IndexerMaxNeighbors: 1000,
 		LeechMaxN:           50,
@@ -30,14 +31,18 @@ func Run(database persistence.Database) {
 
 	// Handle Ctrl-C gracefully.
 	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
 
 	trawlingManager := dht.NewManager(opts.IndexerAddrs, opts.IndexerInterval, opts.IndexerMaxNeighbors)
 	metadataSink := metadata.NewSink(5*time.Second, opts.LeechMaxN)
 
-	// The Event Loop
-	for stopped := false; !stopped; {
+	// The "event loop".
+	for {
 		select {
+		case <-interruptChan:
+			trawlingManager.Terminate()
+			return
+
 		case result := <-trawlingManager.Output():
 			infoHash := result.InfoHash()
 
@@ -52,14 +57,6 @@ func Run(database persistence.Database) {
 			if err := database.AddNewTorrent(md.InfoHash, md.Name, md.Files); err != nil {
 				log.Fatalf("Could not add new torrent to the database. %v", err)
 			}
-
-		case <-interruptChan:
-			trawlingManager.Terminate()
-			stopped = true
 		}
-	}
-
-	if err := database.Close(); err != nil {
-		log.Printf("Could not close database! %v", err)
 	}
 }

@@ -81,7 +81,7 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 		totalSize += uint64(file.Size)
 	}
 
-	// This is a workaround for a bug: the database will not accept total_size to be zero.
+	// We do not accept torrents that contain only empty files.
 	if totalSize == 0 {
 		return nil
 	}
@@ -123,16 +123,18 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 		return err
 	}
 
+	now := time.Now().Unix()
 	res, err := tx.Exec(`
 		INSERT INTO torrents (
 			info_hash,
 			name,
 			total_size,
-			discovered_on
-		) VALUES (?, ?, ?, ?);
-	`, infoHash, name, totalSize, time.Now().Unix())
+			created_at,
+			updated_at
+		) VALUES (?, ?, ?, ?, ?);
+	`, infoHash, name, totalSize, now, now)
 	if err != nil {
-		return errors.New("tx.Exec (INSERT OR REPLACE INTO torrents) " + err.Error())
+		return errors.New("tx.Exec (INSERT INTO torrents) " + err.Error())
 	}
 
 	var lastInsertId int64
@@ -226,7 +228,8 @@ func (db *sqlite3Database) QueryTorrents(
 			 , info_hash
 			 , name
 			 , total_size
-			 , discovered_on
+			 , created_at
+			 , updated_at
 			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
 	{{ if .DoJoin }}
 			 , idx.rank
@@ -242,7 +245,7 @@ func (db *sqlite3Database) QueryTorrents(
 			WHERE torrents_idx MATCH ?
 		) AS idx USING(id)
 	{{ end }}
-		WHERE     modified_on <= ?
+		WHERE     updated_at <= ?
 	{{ if not .FirstPage }}
 			  AND ( {{.OrderOn}}, id ) {{GTEorLTE .Ascending}} (?, ?) -- https://www.sqlite.org/rowvalue.html#row_value_comparisons
 	{{ end }}
@@ -323,7 +326,7 @@ func orderOn(orderBy OrderingCriteria) string {
 		return "total_size"
 
 	case ByDiscoveredOn:
-		return "discovered_on"
+		return "created_at"
 
 	case ByNFiles:
 		return "n_files"
@@ -339,7 +342,8 @@ func (db *sqlite3Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error)
 			info_hash,
 			name,
 			total_size,
-			discovered_on,
+			created_at,
+			updated_at
 			(SELECT COUNT(*) FROM files WHERE torrent_id = torrents.id) AS n_files
 		FROM torrents
 		WHERE info_hash = ?`,
