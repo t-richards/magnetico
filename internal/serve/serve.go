@@ -33,21 +33,17 @@ func Run(database persistence.Database) {
 	router.Get("/torrents/{infohash:[a-f0-9]{40}}", torrentsInfohashHandler)
 
 	templateFunctions := template.FuncMap{
-		"add": func(augend int, addends int) int {
-			return augend + addends
-		},
-
-		"subtract": func(minuend int, subtrahend int) int {
-			return minuend - subtrahend
-		},
-
 		"hex": hex.EncodeToString,
 
-		"humanizeUnixTimestamp": func(s int64) string {
+		"unixTimeToString": func(s int64) string {
 			tm := time.Unix(s, 0)
 			// > Format and Parse use a reference time for specifying the format.
 			// https://gobyexample.com/time-formatting-parsing
-			return tm.Format("2006-01-02")
+			return tm.Format("2006-01-02 15:04:05")
+		},
+
+		"humanizeTime": func(s int64) string {
+			return humanize.Time(time.Unix(s, 0))
 		},
 
 		"humanizeSize": humanize.IBytes,

@@ -25,14 +25,19 @@
         {{ range .Torrents }}
         <div class="card mb-4">
             <div class="card-header">
-                <h3><a href="/torrents/{{ .InfoHash | hex }}">{{.Name}}</a></h3>
+                <h3><a href="/torrents/{{ .InfoHash | hex }}">{{ .Name }}</a></h3>
             </div>
             <div class="card-body">
                 <a href="magnet:?xt=urn:btih:{{ .InfoHash | hex }}&dn={{.Name}}" title="Download via magnet link">
                     🧲
                     <small>{{ .InfoHash | hex }}</small>
                 </a>
-                <p class="card-text">{{ .Size | humanizeSize }}, {{ .CreatedAt | humanizeUnixTimestamp }}</p>
+            </div>
+            <div class="card-footer">
+                <small class="text-body-secondary">
+                    {{ .Size | humanizeSize }} |
+                    <span title="Discovered at {{ .CreatedAt | unixTimeToString }}">{{ .CreatedAt | humanizeTime }}</span>
+                </small>
             </div>
         </div>
         {{ end }}
