@@ -92,7 +92,7 @@ func (is *IndexingService) index() {
 		if routingTableLen == 0 {
 			is.bootstrap()
 		} else {
-			//TODO
+			// TODO: ???
 			is.findNeighbors()
 			is.routingTableMutex.Lock()
 			is.routingTable = make(map[string]*net.UDPAddr)
@@ -231,7 +231,7 @@ func (is *IndexingService) onSampleInfohashesResponse(msg *Message, addr *net.UD
 	}
 
 	// TODO: good idea, but also need to track how long they have been here
-	//if msg.R.Num > len(msg.R.Samples) / 20 &&  time.Duration(msg.R.Interval) <= is.interval {
+	// if msg.R.Num > len(msg.R.Samples) / 20 &&  time.Duration(msg.R.Interval) <= is.interval {
 	//	if addr.Port != 0 {  // ignore nodes who "use" port 0...
 	//		is.routingTable[string(msg.R.ID)] = addr
 	//	}

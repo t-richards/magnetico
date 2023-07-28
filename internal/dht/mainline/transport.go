@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	//Throttle rate that transport will have at Start time. Set <= 0 for unlimited requests
+	// Throttle rate that transport will have at Start time. Set <= 0 for unlimited requests.
 	DefaultThrottleRate = -1
 )
 
@@ -74,7 +74,7 @@ func NewTransport(laddr string, onMessage func(*Message, *net.UDPAddr), onConges
 	return t
 }
 
-// Sets t throttle rate at runtime
+// Sets the throttle rate at runtime.
 func (t *Transport) SetThrottle(rate int) {
 	t.throttlingRate = rate
 }
@@ -191,7 +191,6 @@ func (t *Transport) Throttle() {
 
 			go dealer(resetChannel)
 		}
-
 	} else {
 		//no limit, keep giving tickets to whoever requests it
 		for {
@@ -200,7 +199,7 @@ func (t *Transport) Throttle() {
 	}
 }
 
-// statistics
+// statistics.
 type transportStats struct {
 	sync.RWMutex
 	sentPorts map[string]int

@@ -76,10 +76,10 @@ func (p *Protocol) Terminate() {
 	p.transport.Terminate()
 }
 
-// statistics
+// statistics.
 type protocolStats struct {
 	sync.RWMutex
-	messageTypeCount map[string]map[string]int //type=>subtype=>count
+	messageTypeCount map[string]map[string]int // type=>subtype=>count.
 }
 
 func (ps *protocolStats) Reset() {
@@ -137,7 +137,7 @@ func (omc orderedMessagesCount) String() string {
 			" (" + strconv.Itoa(m.messageCount) + ", " + strconv.FormatFloat(m.percentageOverTotal, 'f', -1, 64) + "%)"
 
 		if m.subMessages != nil && len(m.subMessages) > 0 {
-			//add stats for submessages unless there is only 1 submessage with len 0 (empty)
+			// add stats for submessages unless there is only 1 submessage with len 0 (empty)
 			if !(len(m.subMessages) == 1 && len(m.subMessages[0].messageType) == 0) {
 				mostReceivedMessageTypes += "[ " + m.subMessages.String() + " ]"
 			}
@@ -280,7 +280,7 @@ func (p *Protocol) onMessage(msg *Message, addr *net.UDPAddr) {
 	default:
 	}
 
-	//let's update stats at the end so that in case of an "r" message the previous switch case can update the temporaryQ field
+	// let's update stats at the end so that in case of an "r" message the previous switch case can update the temporaryQ field
 	p.stats.Lock()
 	if _, ok := p.stats.messageTypeCount[msg.Y]; !ok {
 		p.stats.messageTypeCount[msg.Y] = make(map[string]int)

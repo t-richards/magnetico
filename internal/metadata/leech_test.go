@@ -7,7 +7,7 @@ import (
 	"github.com/anacrolix/torrent/bencode"
 )
 
-var operationsTest_instances = []struct {
+var operationsTestInstances = []struct {
 	dump    []byte
 	surplus []byte
 }{
@@ -29,7 +29,7 @@ var operationsTest_instances = []struct {
 }
 
 func TestDecoder(t *testing.T) {
-	for i, instance := range operationsTest_instances {
+	for i, instance := range operationsTestInstances {
 		buf := bytes.NewBuffer(instance.dump)
 		err := bencode.NewDecoder(buf).Decode(&struct{}{})
 		if err != nil {

@@ -75,7 +75,7 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 	// returning from the function so the tx.Rollback() call will fail, trying to rollback a
 	// committed transaction. BUT, if an error occurs, we'll get our transaction rollback'ed, which
 	// is nice.
-	defer tx.Rollback() // nolint:errcheck
+	defer tx.Rollback() //nolint:errcheck
 
 	var totalSize uint64 = 0
 	for _, file := range files {
@@ -138,8 +138,8 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 		return errors.New("tx.Exec (INSERT INTO torrents) " + err.Error())
 	}
 
-	var lastInsertId int64
-	if lastInsertId, err = res.LastInsertId(); err != nil {
+	var lastInsertID int64
+	if lastInsertID, err = res.LastInsertId(); err != nil {
 		return errors.New("sql.Result.LastInsertId " + err.Error())
 	}
 
@@ -153,13 +153,13 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 	//
 	// Now, last_insert_rowid() should never return zero (or any negative values really) as we
 	// insert into torrents and handle any errors accordingly right afterwards.
-	if lastInsertId <= 0 {
-		log.Panicf("last_insert_rowid() <= 0 (this should have never happened!). lastInsertId: %d", lastInsertId)
+	if lastInsertID <= 0 {
+		log.Panicf("last_insert_rowid() <= 0 (this should have never happened!). lastInsertId: %d", lastInsertID)
 	}
 
 	for _, file := range files {
 		_, err = tx.Exec("INSERT INTO files (torrent_id, size, path) VALUES (?, ?, ?);",
-			lastInsertId, file.Size, file.Path,
+			lastInsertID, file.Size, file.Path,
 		)
 		if err != nil {
 			return errors.New("tx.Exec (INSERT INTO files) " + err.Error())
@@ -190,11 +190,7 @@ func (db *sqlite3Database) GetNumberOfTorrents(ctx context.Context) (uint, error
 	// `--SEARCH torrents
 	//
 	err := db.conn.QueryRowContext(ctx, "SELECT MAX(ROWID) FROM torrents;").Scan(&n)
-	if err != nil {
-		return 0, err
-	}
-
-	return n, nil
+	return n, err
 }
 
 func (db *sqlite3Database) QueryTorrents(
@@ -273,7 +269,7 @@ func (db *sqlite3Database) QueryTorrents(
 	})
 
 	// Prepare query
-	queryArgs := make([]interface{}, 0)
+	queryArgs := make([]any, 0)
 	if doJoin {
 		queryArgs = append(queryArgs, query)
 	}
@@ -417,7 +413,7 @@ func (db *sqlite3Database) setupDatabase() error {
 	// returning from the function so the tx.Rollback() call will fail, trying to rollback a
 	// committed transaction. BUT, if an error occurs, we'll get our transaction rollback'ed, which
 	// is nice.
-	defer tx.Rollback() // nolint:errcheck
+	defer tx.Rollback() //nolint:errcheck
 
 	// Get the user_version:
 	rows, err := tx.Query("PRAGMA user_version;")
@@ -484,7 +480,7 @@ func (db *sqlite3Database) setupDatabase() error {
 	return nil
 }
 
-func executeTemplate(text string, data interface{}, funcs template.FuncMap) string {
+func executeTemplate(text string, data any, funcs template.FuncMap) string {
 	t := template.Must(template.New("anon").Funcs(funcs).Parse(text))
 
 	var buf bytes.Buffer

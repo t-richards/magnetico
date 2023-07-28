@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/t-richards/magnetico/internal/persistence"
 )
 
@@ -38,7 +39,7 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 	}
 }
 
-// Torrents search page
+// Torrents search page.
 type torrentsData struct {
 	Torrents []persistence.TorrentMetadata
 	Query    string
@@ -48,7 +49,7 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 	listTemplate := template.Must(template.New("torrent").Funcs(templateFunctions).Parse(mustTemplate("templates/torrents.html")))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		lastId := 0.0
+		lastID := 0.0
 		lastVal := uint64(0)
 		_ = r.ParseForm()
 
@@ -58,7 +59,7 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 			persistence.ByDiscoveredOn,
 			true,
 			15,
-			&lastId,
+			&lastID,
 			&lastVal,
 		)
 		if err != nil {
@@ -127,7 +128,7 @@ func handlerError(err error, w http.ResponseWriter) {
 	_, _ = w.Write([]byte(err.Error()))
 }
 
-func emptyFaviconHandler(w http.ResponseWriter, r *http.Request) {
+func emptyFaviconHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "image/x-icon")
 }
 

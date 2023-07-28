@@ -9,7 +9,7 @@ import (
 	"github.com/anacrolix/torrent/bencode"
 )
 
-var codecTest_validInstances = []struct {
+var codecTestValidInstances = []struct {
 	data []byte
 	msg  Message
 }{
@@ -191,11 +191,11 @@ var codecTest_validInstances = []struct {
 		},
 	},
 	{
-		data: []byte("d1:eli201e23:A Generic Error Ocurrede1:t2:aa1:y1:ee"),
+		data: []byte("d1:eli201e24:A Generic Error Occurrede1:t2:aa1:y1:ee"),
 		msg: Message{
 			T: []byte("aa"),
 			Y: "e",
-			E: Error{Code: 201, Message: []byte("A Generic Error Ocurred")},
+			E: Error{Code: 201, Message: []byte("A Generic Error Occurred")},
 		},
 	},
 	// TODO: Test Error where E.Message is an empty string, and E.Message contains invalid Unicode characters.
@@ -203,7 +203,7 @@ var codecTest_validInstances = []struct {
 }
 
 func TestUnmarshal(t *testing.T) {
-	for i, instance := range codecTest_validInstances {
+	for i, instance := range codecTestValidInstances {
 		msg := Message{}
 		err := bencode.Unmarshal(instance.data, &msg)
 		if err != nil {
@@ -218,7 +218,7 @@ func TestUnmarshal(t *testing.T) {
 }
 
 func TestMarshal(t *testing.T) {
-	for i, instance := range codecTest_validInstances {
+	for i, instance := range codecTestValidInstances {
 		data, err := bencode.Marshal(instance.msg)
 		if err != nil {
 			t.Errorf("Error while marshalling valid msg #%d: %v", i+1, err)

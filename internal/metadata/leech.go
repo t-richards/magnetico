@@ -18,7 +18,7 @@ import (
 	"github.com/t-richards/magnetico/internal/persistence"
 )
 
-const MAX_METADATA_SIZE = 10 * 1024 * 1024
+const MaxMetadataSize = 10 * 1024 * 1024
 
 type rootDict struct {
 	M            mDict `bencode:"m"`
@@ -131,7 +131,7 @@ func (l *Leech) doExHandshake() error {
 		return errors.New("unmarshal rExMessage " + err.Error())
 	}
 
-	if !(0 < rRootDict.MetadataSize && rRootDict.MetadataSize < MAX_METADATA_SIZE) {
+	if !(0 < rRootDict.MetadataSize && rRootDict.MetadataSize < MaxMetadataSize) {
 		return fmt.Errorf("metadata too big or its size is less than or equal zero")
 	}
 
@@ -187,7 +187,7 @@ func (l *Leech) readMessage() ([]byte, error) {
 	// message, and hence causing us to run out of memory.
 	// This is a crude check that does not let it happen (i.e. boundary can probably be
 	// tightened a lot more.)
-	if rLength > MAX_METADATA_SIZE {
+	if rLength > MaxMetadataSize {
 		return nil, errors.New("message is longer than max allowed metadata size")
 	}
 
@@ -429,7 +429,7 @@ func (l *Leech) Do(deadline time.Time) {
 	})
 }
 
-// COPIED FROM anacrolix/torrent
+// COPIED FROM anacrolix/torrent.
 func validateInfo(info *metainfo.Info) error {
 	if len(info.Pieces)%20 != 0 {
 		return errors.New("pieces has invalid length")

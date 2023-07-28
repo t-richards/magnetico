@@ -1,0 +1,65 @@
+[linters]
+  disable = [
+    # things that will likely never be fixed
+    "depguard",     # much too noisy without explicit configuration
+    "dupl",         # produces false-positives
+    "exhaustruct",  # objectively gross, literally nobody wants this
+    "gofumpt",      # conflicts with goimports
+    "gomnd",        # don't care
+    "paralleltest", # don't care
+    "rowserrcheck", # disabled because of generics https://github.com/golangci/golangci-lint/issues/2649
+    "wastedassign", # disabled because of generics https://github.com/golangci/golangci-lint/issues/2649
+
+    # highest priority things to fix first
+    "errorlint",
+    "exportloopref",
+    "execinquery",
+    "forcetypeassert",
+    "gocritic",
+    "makezero",
+    "sqlclosecheck",
+    "stylecheck",
+    "nilnil",
+    "testpackage",
+
+    # medium priority nitpicks
+    "cyclop",
+    "exhaustive",
+    "gocyclo",
+    "goerr113",
+    "gocognit",
+    "godox",
+    "gosec",
+    "ireturn",
+    "lll",
+    "funlen",
+    "revive",
+    "wrapcheck",
+    "nestif",
+
+    # noisy things to revisit later
+    "gochecknoglobals",
+    "dupword",
+    "nonamedreturns",
+    "nlreturn",
+    "varnamelen",
+    "wsl"
+  ]
+  presets = [
+    "bugs",
+    "comment",
+    "complexity",
+    "error",
+    "format",
+    "import",
+    "metalinter",
+    "module",
+    "performance",
+    "sql",
+    "style",
+    "test",
+    "unused",
+  ]
+
+[linters-settings.gci]
+  local-prefixes = "github.com/t-richards/magnetico"

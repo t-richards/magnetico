@@ -7,16 +7,16 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// round iFloat to iDecimalPlaces decimal points
+// round iFloat to iDecimalPlaces decimal points.
 func RoundToDecimal(iFloat float64, iDecimalPlaces int) float64 {
 	var multiplier float64 = 10
 	for i := 1; i < iDecimalPlaces; i++ {
-		multiplier = multiplier * 10
+		multiplier *= 10
 	}
 	return math.Round(iFloat*multiplier) / multiplier
 }
 
-// UDPAddr -> RawSockaddr conversion
+// UDPAddr -> RawSockaddr conversion.
 func NetAddrToSockaddr(addr *net.UDPAddr) unix.Sockaddr {
 	if ip := addr.IP.To4(); ip != nil {
 		return &unix.SockaddrInet4{
@@ -35,10 +35,9 @@ func NetAddrToSockaddr(addr *net.UDPAddr) unix.Sockaddr {
 	return nil
 }
 
-// RawSockaddr -> UDPAddr conversion
+// RawSockaddr -> UDPAddr conversion.
 func SockaddrToUDPAddr(sockAddr unix.Sockaddr) *net.UDPAddr {
 	switch typedSocketAddr := sockAddr.(type) {
-
 	case *unix.SockaddrInet4:
 		return &net.UDPAddr{
 			IP:   typedSocketAddr.Addr[:],

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var protocolTest_validInstances = []struct {
+var protocolTestValidInstances = []struct {
 	validator func(*Message) bool
 	msg       Message
 }{
@@ -190,7 +190,7 @@ var protocolTest_validInstances = []struct {
 }
 
 func TestValidators(t *testing.T) {
-	for i, instance := range protocolTest_validInstances {
+	for i, instance := range protocolTestValidInstances {
 		if isValid := instance.validator(&instance.msg); !isValid {
 			t.Errorf("False-positive for valid msg #%d!", i+1)
 		}

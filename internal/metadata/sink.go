@@ -32,7 +32,7 @@ type Sink struct {
 	incomingInfoHashesMx sync.Mutex
 
 	terminated  bool
-	termination chan interface{}
+	termination chan any
 
 	deleted int
 }
@@ -79,7 +79,7 @@ func NewSink(deadline time.Duration, maxNLeeches int) *Sink {
 	ms.maxNLeeches = maxNLeeches
 	ms.drain = make(chan Metadata, 10)
 	ms.incomingInfoHashes = make(map[[20]byte][]net.TCPAddr)
-	ms.termination = make(chan interface{})
+	ms.termination = make(chan any)
 
 	go func() {
 		for range time.Tick(deadline) {
