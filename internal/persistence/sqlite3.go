@@ -271,6 +271,9 @@ func (db *sqlite3Database) QueryTorrents(
 	// Prepare query
 	queryArgs := make([]any, 0)
 	if doJoin {
+		// SQLite's FTS5 requires double quotes to be escaped with double quotes.
+		query = strings.Replace(query, `"`, `""`, -1)
+		query = `"` + query + `"`
 		queryArgs = append(queryArgs, query)
 	}
 	queryArgs = append(queryArgs, epoch)
@@ -437,6 +440,7 @@ func (db *sqlite3Database) setupDatabase() error {
 		return errors.New("migrations.ReadDir " + err.Error())
 	}
 
+	// TODO(tom): Ensure migrations are sorted by version.
 	for _, migration := range entries {
 		migrateVerString := strings.Split(migration.Name(), "_")[0]
 		migrateVersion, err := strconv.ParseInt(migrateVerString, 10, 32)
@@ -464,13 +468,6 @@ func (db *sqlite3Database) setupDatabase() error {
 		if err != nil {
 			return errors.New("sql.Tx.Exec (PRAGMA user_version) " + err.Error())
 		}
-	}
-
-	// The database likes to corrupt itself for some reason.
-	// Suspect flaky migration things.
-	_, err = tx.Exec("PRAGMA integrity_check;")
-	if err != nil {
-		return errors.New("sql.Tx.Exec (PRAGMA integrity_check) " + err.Error())
 	}
 
 	if err = tx.Commit(); err != nil {

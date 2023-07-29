@@ -2,7 +2,6 @@ package serve
 
 import (
 	"encoding/hex"
-	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -26,7 +25,7 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		nTorrents, err := database.GetNumberOfTorrents(r.Context())
 		if err != nil {
-			handlerError(errors.New("GetNumberOfTorrents "+err.Error()), w)
+			log.Printf("while fetching number of torrents: %v\n", err)
 			return
 		}
 
@@ -121,11 +120,6 @@ func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
 			log.Printf("while executing torrent template: %v", err)
 		}
 	}
-}
-
-func handlerError(err error, w http.ResponseWriter) {
-	w.WriteHeader(http.StatusInternalServerError)
-	_, _ = w.Write([]byte(err.Error()))
 }
 
 func emptyFaviconHandler(w http.ResponseWriter, _ *http.Request) {

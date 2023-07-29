@@ -16,7 +16,7 @@
 <body>
     <header class="mb-4 p-3 d-flex align-items-center justify-content-start">
         <h1><a href="/" class="text-body text-decoration-none">magnetico</a></h1>
-        <form class="ms-4">
+        <form class="ms-4" action="/torrents" method="get" autocomplete="off" role="search">
             <div class="input-group">
                 <input type="text" class="form-control" name="query" placeholder="Search the BitTorrent DHT"
                     aria-label="Search the BitTorrent DHT" value="{{ .Query }}">
@@ -35,8 +35,7 @@
                 <td class="position-relative">
                     <i class="bi bi-magnet"></i>
                     <a href="magnet:?xt=urn:btih:{{ .Torrent.InfoHash | hex }}&amp;dn={{ .Torrent.Name }}"
-                        class="stretched-link"
-                        title="Download via magnet link">
+                        class="stretched-link" title="Download via magnet link">
                         <small>{{ .Torrent.InfoHash | hex }}</small>
                     </a>
                 </td>
@@ -59,10 +58,10 @@
         <div class="files">
             <ul>
                 {{ range .Files }}
-                    <li>{{ .Path }} ({{ .Size | humanizeSize }})</li>
+                <li>{{ .Path }} ({{ .Size | humanizeSize }})</li>
                 {{ end }}
             </ul>
-        </table>
+        </div>
     </main>
 
 </body>
