@@ -22,6 +22,11 @@ var searchQuery string
 //go:embed migrations/*.sql
 var migrations embed.FS
 
+const (
+	// The maximum number of torrents to return in a single page.
+	MaxResults = 15
+)
+
 type Database struct {
 	conn *sql.DB
 }
@@ -178,8 +183,8 @@ func (db *Database) Close() error {
 }
 
 // Returns an approximate number of torrents in the database.
-func (db *Database) GetNumberOfTorrents(ctx context.Context) (uint, error) {
-	var n uint
+func (db *Database) GetNumberOfTorrents(ctx context.Context) (int, error) {
+	var n int
 
 	// Note that SELECT COUNT(1) is less efficient than asking for the maximum ROWID:
 	//
@@ -193,7 +198,6 @@ func (db *Database) GetNumberOfTorrents(ctx context.Context) (uint, error) {
 }
 
 type searchPlaceholders struct {
-	FirstPage bool
 	OrderOn   string
 	Ascending bool
 }
@@ -218,8 +222,8 @@ var searchFuncs = template.FuncMap{
 func (db *Database) QueryTorrentsCount(
 	ctx context.Context,
 	query string,
-) (uint, error) {
-	var count uint
+) (int, error) {
+	var count int
 	query = wrapFtsQuery(query)
 	err := db.conn.QueryRowContext(ctx, `
 		SELECT COUNT(1)
@@ -234,34 +238,20 @@ func (db *Database) QueryTorrents(
 	query string,
 	orderBy OrderingCriteria,
 	ascending bool,
-	limit uint,
-	lastOrderedValue *float64,
-	lastID *uint64,
+	page int,
 ) ([]TorrentMetadata, error) {
-	if (lastOrderedValue == nil) != (lastID == nil) {
-		return nil, fmt.Errorf("lastOrderedValue and lastID should be supplied together, if supplied")
-	}
-
-	firstPage := lastID == nil
-
-	// executeTemplate is used to prepare the SQL query, WITH PLACEHOLDERS FOR USER INPUT.
+	// Prepare query
 	searchParams := searchPlaceholders{
-		FirstPage: firstPage,
 		OrderOn:   orderOn(orderBy),
 		Ascending: ascending,
 	}
 	sqlQuery := executeTemplate(searchQuery, searchParams, searchFuncs)
 
-	// Prepare query
-	queryArgs := make([]any, 0)
-	queryArgs = append(queryArgs, wrapFtsQuery(query))
-	if !firstPage {
-		queryArgs = append(queryArgs, lastOrderedValue)
-		queryArgs = append(queryArgs, lastID)
-	}
-	queryArgs = append(queryArgs, limit)
+	// Pages on the UI are 1-indexed, but the database is 0-indexed.
+	offset := (page - 1) * MaxResults
 
-	rows, err := db.conn.Query(sqlQuery, queryArgs...)
+	// Run query
+	rows, err := db.conn.Query(sqlQuery, wrapFtsQuery(query), MaxResults, offset)
 	if err != nil {
 		return nil, errors.New("query error " + err.Error())
 	}

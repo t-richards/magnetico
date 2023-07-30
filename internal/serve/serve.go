@@ -22,8 +22,19 @@ var fs embed.FS
 
 // Shared template functions across all templates.
 var templateFunctions = template.FuncMap{
-	"comma": func(s uint) string {
-		return humanize.Comma(int64(s))
+	"comma": func(s any) string {
+		switch v := s.(type) {
+		case uint64:
+			return humanize.Comma(int64(v))
+		case int64:
+			return humanize.Comma(v)
+		case uint:
+			return humanize.Comma(int64(v))
+		case int:
+			return humanize.Comma(int64(v))
+		default:
+			return "unknown"
+		}
 	},
 
 	"hex": hex.EncodeToString,
@@ -37,6 +48,8 @@ var templateFunctions = template.FuncMap{
 		case uint64:
 			return humanize.IBytes(v)
 		case int64:
+			return humanize.IBytes(uint64(v))
+		case uint:
 			return humanize.IBytes(uint64(v))
 		case int:
 			return humanize.IBytes(uint64(v))

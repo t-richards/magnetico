@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -15,7 +16,7 @@ import (
 
 // Homepage.
 type homepageData struct {
-	NTorrents uint
+	NTorrents int
 }
 
 func rootHandler(database *persistence.Database) http.HandlerFunc {
@@ -39,9 +40,17 @@ func rootHandler(database *persistence.Database) http.HandlerFunc {
 
 // Torrents search page.
 type torrentsData struct {
-	Torrents   []persistence.TorrentMetadata
-	TotalCount uint
-	Query      string
+	// User inputs
+	Query string
+	Page  int
+
+	// Query results
+	Torrents []persistence.TorrentMetadata
+
+	// Other computed bits
+	TotalCount int
+	MaxPage    int
+	Pagination Pagination
 }
 
 func torrentsHandler(database *persistence.Database) http.HandlerFunc {
@@ -49,8 +58,10 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = r.ParseForm()
+		query := r.FormValue("query")
+		page := getPageNumber(r)
 
-		count, err := database.QueryTorrentsCount(r.Context(), r.FormValue("query"))
+		count, err := database.QueryTorrentsCount(r.Context(), query)
 		if err != nil {
 			log.Printf("while fetching number of torrents: %v\n", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -58,12 +69,10 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 		}
 
 		metadata, err := database.QueryTorrents(
-			r.FormValue("query"),
+			query,
 			persistence.ByRelevance,
 			true,
-			15,
-			nil,
-			nil,
+			page,
 		)
 		if err != nil {
 			log.Printf("while fetching torrents: %v\n", err)
@@ -71,15 +80,30 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 			return
 		}
 
+		maxPage := count / persistence.MaxResults
+		pagination := Paginate(page, maxPage)
 		err = listTemplate.Execute(w, torrentsData{
 			Torrents:   metadata,
 			TotalCount: count,
 			Query:      r.FormValue("query"),
+			Page:       page,
+			Pagination: pagination,
+			MaxPage:    maxPage,
 		})
 		if err != nil {
 			log.Printf("while executing torrents template: %v", err)
 		}
 	}
+}
+
+func getPageNumber(r *http.Request) int {
+	page := r.FormValue("page")
+	pageNo, err := strconv.ParseInt(page, 10, 64)
+	if err != nil {
+		return 1
+	}
+
+	return int(pageNo)
 }
 
 type torrentData struct {

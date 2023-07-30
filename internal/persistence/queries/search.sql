@@ -16,9 +16,6 @@ INNER JOIN (
     WHERE torrents_idx MATCH ?
 ) AS idx USING(id)
 
-{{ if not .FirstPage }}
-WHERE ( {{.OrderOn}}, id ) {{GTEorLTE .Ascending}} (?, ?) {{/* https://www.sqlite.org/rowvalue.html#row_value_comparisons */}}
-{{ end }}
 ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}, id {{AscOrDesc .Ascending}}
 
-LIMIT ?;
+LIMIT ? OFFSET ?;

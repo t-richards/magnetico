@@ -46,8 +46,9 @@ Download the latest release from the [releases page](https://github.com/t-richar
  - [x] Replace client-side handlebars templates with go templates
  - [x] Add robots noindex/nofollow headers
  - [x] Pretty up the files list
- - [ ] Fix pagination
+ - [x] Fix pagination
  - [ ] Fix sorting
+ - [ ] Fix table formatting
  - [ ] Automate docker image building
  - [ ] Fix crawler code
    - [ ] `Could NOT write an UDP packet! invalid argument`
