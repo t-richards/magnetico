@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"text/template"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 
@@ -19,7 +18,7 @@ type homepageData struct {
 	NTorrents uint
 }
 
-func rootHandler(database persistence.Database) http.HandlerFunc {
+func rootHandler(database *persistence.Database) http.HandlerFunc {
 	homepageTemplate := template.Must(template.New("homepage").Funcs(templateFunctions).Parse(mustTemplate("templates/homepage.html")))
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -40,26 +39,31 @@ func rootHandler(database persistence.Database) http.HandlerFunc {
 
 // Torrents search page.
 type torrentsData struct {
-	Torrents []persistence.TorrentMetadata
-	Query    string
+	Torrents   []persistence.TorrentMetadata
+	TotalCount uint
+	Query      string
 }
 
-func torrentsHandler(database persistence.Database) http.HandlerFunc {
+func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 	listTemplate := template.Must(template.New("torrent").Funcs(templateFunctions).Parse(mustTemplate("templates/torrents.html")))
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		lastID := 0.0
-		lastVal := uint64(0)
 		_ = r.ParseForm()
+
+		count, err := database.QueryTorrentsCount(r.Context(), r.FormValue("query"))
+		if err != nil {
+			log.Printf("while fetching number of torrents: %v\n", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
 
 		metadata, err := database.QueryTorrents(
 			r.FormValue("query"),
-			time.Now().Unix(),
-			persistence.ByDiscoveredOn,
+			persistence.ByRelevance,
 			true,
 			15,
-			&lastID,
-			&lastVal,
+			nil,
+			nil,
 		)
 		if err != nil {
 			log.Printf("while fetching torrents: %v\n", err)
@@ -68,8 +72,9 @@ func torrentsHandler(database persistence.Database) http.HandlerFunc {
 		}
 
 		err = listTemplate.Execute(w, torrentsData{
-			Torrents: metadata,
-			Query:    r.FormValue("query"),
+			Torrents:   metadata,
+			TotalCount: count,
+			Query:      r.FormValue("query"),
 		})
 		if err != nil {
 			log.Printf("while executing torrents template: %v", err)
@@ -84,7 +89,7 @@ type torrentData struct {
 	Tree    Directory
 }
 
-func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
+func torrentsInfohashHandler(database *persistence.Database) http.HandlerFunc {
 	infoTemplate := template.Must(template.New("torrent").Funcs(templateFunctions).Parse(mustTemplate("templates/torrent.html")))
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +131,7 @@ func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
 
 func emptyFaviconHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "image/x-icon")
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func staticHandler(w http.ResponseWriter, r *http.Request) {

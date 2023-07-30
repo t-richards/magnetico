@@ -15,7 +15,7 @@ const (
 
 func main() {
 	// open the database
-	database, err := persistence.MakeDatabase(DatabasePath)
+	database, err := persistence.NewSqlite3Database(DatabasePath)
 	if err != nil {
 		log.Fatalf("Could not open the database %s. %v", DatabasePath, err)
 	}

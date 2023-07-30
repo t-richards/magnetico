@@ -25,14 +25,10 @@
         </form>
     </header>
     <main class="container">
-        <h2>Torrent Information</h2>
+        <h2>{{ .Torrent.Name }}</h2>
         <table class="table table-striped table-hover">
             <tr>
-                <th scope="row">Name</th>
-                <td>{{ .Torrent.Name }}</td>
-            </tr>
-            <tr>
-                <th scope="row">Download</th>
+                <th scope="row">Magnet Link</th>
                 <td class="position-relative">
                     <i class="bi bi-magnet"></i>
                     <a href="magnet:?xt=urn:btih:{{ .Torrent.InfoHash | hex }}&amp;dn={{ .Torrent.Name }}"
@@ -42,16 +38,16 @@
                 </td>
             </tr>
             <tr>
-                <th scope="row">Size</th>
-                <td>{{ .Torrent.Size | humanizeSize }}</td>
-            </tr>
-            <tr>
-                <th scope="row">Discovered at</th>
-                <td>{{ .Torrent.CreatedAt | unixTimeToString }}</td>
-            </tr>
-            <tr>
                 <th scope="row">Files</th>
                 <td>{{ .Torrent.NFiles }}</td>
+            </tr>
+            <tr>
+                <th scope="row">Size</th>
+                <td>{{ .Torrent.Size | humanizeSize }} ({{ .Torrent.Size }} bytes)</td>
+            </tr>
+            <tr>
+                <th scope="row">Discovered</th>
+                <td>{{ .Torrent.CreatedAt | humanizeTime }} ({{ .Torrent.CreatedAt | unixTimeToString }})</td>
             </tr>
         </table>
 
@@ -59,7 +55,7 @@
         <ul class="tree">
             <li>
                 <details open>
-                    <summary>&nbsp;</summary>
+                    <summary class="user-select-none">&nbsp;</summary>
                     <ul>{{template "filetree" .Tree}}</ul>
                 </details>
             </li>

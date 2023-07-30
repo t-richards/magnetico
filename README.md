@@ -42,15 +42,15 @@ Download the latest release from the [releases page](https://github.com/t-richar
    - [x] Instant corruption when applying schema
    - [x] Analyze and flatten migrations
    - [x] Fix rows erroneously being closed early
-   - [ ] Fix syntax errors when using FTS search
-   - [ ] Maybe replace hand-rolled queries with an ORM?
+   - [x] Fix syntax errors when using FTS search
  - [x] Replace client-side handlebars templates with go templates
  - [x] Add robots noindex/nofollow headers
- - [ ] Fix pagination
  - [x] Pretty up the files list
+ - [ ] Fix pagination
+ - [ ] Fix sorting
+ - [ ] Automate docker image building
  - [ ] Fix crawler code
    - [ ] `Could NOT write an UDP packet! invalid argument`
- - [ ] Automate docker image building
  - [ ] Windows support? (PRs welcome)
 
 ## Why?

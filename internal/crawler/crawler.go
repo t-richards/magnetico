@@ -20,7 +20,7 @@ type crawlerOpts struct {
 	LeechMaxN int
 }
 
-func Run(database persistence.Database) {
+func Run(database *persistence.Database) {
 	// Hardcoded options for now.
 	opts := crawlerOpts{
 		IndexerAddrs:        []string{"0.0.0.0:0"},

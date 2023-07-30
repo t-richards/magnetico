@@ -22,14 +22,11 @@ var fs embed.FS
 
 // Shared template functions across all templates.
 var templateFunctions = template.FuncMap{
-	"hex": hex.EncodeToString,
-
-	"unixTimeToString": func(s int64) string {
-		tm := time.Unix(s, 0)
-		// > Format and Parse use a reference time for specifying the format.
-		// https://gobyexample.com/time-formatting-parsing
-		return tm.Format("2006-01-02 15:04:05")
+	"comma": func(s uint) string {
+		return humanize.Comma(int64(s))
 	},
+
+	"hex": hex.EncodeToString,
 
 	"humanizeTime": func(s int64) string {
 		return humanize.Time(time.Unix(s, 0))
@@ -48,8 +45,11 @@ var templateFunctions = template.FuncMap{
 		}
 	},
 
-	"comma": func(s uint) string {
-		return humanize.Comma(int64(s))
+	"unixTimeToString": func(s int64) string {
+		tm := time.Unix(s, 0)
+		// > Format and Parse use a reference time for specifying the format.
+		// https://gobyexample.com/time-formatting-parsing
+		return tm.Format("2006-01-02 15:04:05")
 	},
 }
 
@@ -57,7 +57,7 @@ const (
 	BindAddress = ":8080"
 )
 
-func Run(database persistence.Database) {
+func Run(database *persistence.Database) {
 	// Main application routes
 	router := chi.NewRouter()
 	router.Use(securityHeaders)

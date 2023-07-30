@@ -16,15 +16,18 @@ import (
 	_ "modernc.org/sqlite" // Required to use sqlite3
 )
 
+//go:embed queries/search.sql
+var searchQuery string
+
 //go:embed migrations/*.sql
 var migrations embed.FS
 
-type sqlite3Database struct {
+type Database struct {
 	conn *sql.DB
 }
 
-func makeSqlite3Database(filename string) (Database, error) {
-	db := new(sqlite3Database)
+func NewSqlite3Database(filename string) (*Database, error) {
+	db := new(Database)
 
 	var err error
 	db.conn, err = sql.Open("sqlite", filename)
@@ -46,11 +49,7 @@ func makeSqlite3Database(filename string) (Database, error) {
 	return db, nil
 }
 
-func (db *sqlite3Database) Engine() databaseEngine {
-	return Sqlite3
-}
-
-func (db *sqlite3Database) DoesTorrentExist(infoHash []byte) (bool, error) {
+func (db *Database) DoesTorrentExist(infoHash []byte) (bool, error) {
 	rows, err := db.conn.Query("SELECT 1 FROM torrents WHERE info_hash = ?;", infoHash)
 	if err != nil {
 		return false, err
@@ -66,7 +65,7 @@ func (db *sqlite3Database) DoesTorrentExist(infoHash []byte) (bool, error) {
 	return exists, nil
 }
 
-func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []File) error {
+func (db *Database) AddNewTorrent(infoHash []byte, name string, files []File) error {
 	tx, err := db.conn.Begin()
 	if err != nil {
 		return errors.New("conn.Begin " + err.Error())
@@ -174,12 +173,12 @@ func (db *sqlite3Database) AddNewTorrent(infoHash []byte, name string, files []F
 	return nil
 }
 
-func (db *sqlite3Database) Close() error {
+func (db *Database) Close() error {
 	return db.conn.Close()
 }
 
 // Returns an approximate number of torrents in the database.
-func (db *sqlite3Database) GetNumberOfTorrents(ctx context.Context) (uint, error) {
+func (db *Database) GetNumberOfTorrents(ctx context.Context) (uint, error) {
 	var n uint
 
 	// Note that SELECT COUNT(1) is less efficient than asking for the maximum ROWID:
@@ -193,90 +192,69 @@ func (db *sqlite3Database) GetNumberOfTorrents(ctx context.Context) (uint, error
 	return n, err
 }
 
-func (db *sqlite3Database) QueryTorrents(
+type searchPlaceholders struct {
+	FirstPage bool
+	OrderOn   string
+	Ascending bool
+}
+
+var searchFuncs = template.FuncMap{
+	"GTEorLTE": func(ascending bool) string {
+		if ascending {
+			return ">"
+		} else {
+			return "<"
+		}
+	},
+	"AscOrDesc": func(ascending bool) string {
+		if ascending {
+			return "ASC"
+		} else {
+			return "DESC"
+		}
+	},
+}
+
+func (db *Database) QueryTorrentsCount(
+	ctx context.Context,
 	query string,
-	epoch int64,
+) (uint, error) {
+	var count uint
+	query = wrapFtsQuery(query)
+	err := db.conn.QueryRowContext(ctx, `
+		SELECT COUNT(1)
+		FROM torrents_idx
+		WHERE torrents_idx MATCH ?;
+	`, query).Scan(&count)
+
+	return count, err
+}
+
+func (db *Database) QueryTorrents(
+	query string,
 	orderBy OrderingCriteria,
 	ascending bool,
 	limit uint,
 	lastOrderedValue *float64,
 	lastID *uint64,
 ) ([]TorrentMetadata, error) {
-	if query == "" && orderBy == ByRelevance {
-		return nil, fmt.Errorf("torrents cannot be ordered by relevance when the query is empty")
-	}
 	if (lastOrderedValue == nil) != (lastID == nil) {
 		return nil, fmt.Errorf("lastOrderedValue and lastID should be supplied together, if supplied")
 	}
 
-	doJoin := query != ""
 	firstPage := lastID == nil
 
 	// executeTemplate is used to prepare the SQL query, WITH PLACEHOLDERS FOR USER INPUT.
-	sqlQuery := executeTemplate(`
-		SELECT id 
-			 , info_hash
-			 , name
-			 , total_size
-			 , created_at
-			 , updated_at
-			 , (SELECT COUNT(*) FROM files WHERE torrents.id = files.torrent_id) AS n_files
-	{{ if .DoJoin }}
-			 , idx.rank
-	{{ else }}
-			 , 0
-	{{ end }}
-		FROM torrents
-	{{ if .DoJoin }}
-		INNER JOIN (
-			SELECT rowid AS id
-				 , bm25(torrents_idx) AS rank
-			FROM torrents_idx
-			WHERE torrents_idx MATCH ?
-		) AS idx USING(id)
-	{{ end }}
-		WHERE updated_at <= ?
-	{{ if not .FirstPage }}
-		AND ( {{.OrderOn}}, id ) {{GTEorLTE .Ascending}} (?, ?) {{/* https://www.sqlite.org/rowvalue.html#row_value_comparisons */}}
-	{{ end }}
-		ORDER BY {{.OrderOn}} {{AscOrDesc .Ascending}}, id {{AscOrDesc .Ascending}}
-		LIMIT ?;	
-	`, struct {
-		DoJoin    bool
-		FirstPage bool
-		OrderOn   string
-		Ascending bool
-	}{
-		DoJoin:    doJoin,
+	searchParams := searchPlaceholders{
 		FirstPage: firstPage,
 		OrderOn:   orderOn(orderBy),
 		Ascending: ascending,
-	}, template.FuncMap{
-		"GTEorLTE": func(ascending bool) string {
-			if ascending {
-				return ">"
-			} else {
-				return "<"
-			}
-		},
-		"AscOrDesc": func(ascending bool) string {
-			if ascending {
-				return "ASC"
-			} else {
-				return "DESC"
-			}
-		},
-	})
+	}
+	sqlQuery := executeTemplate(searchQuery, searchParams, searchFuncs)
 
 	// Prepare query
 	queryArgs := make([]any, 0)
-	if doJoin {
-		// SQLite's FTS5 requires double quotes to be escaped with double quotes.
-		query = strings.Replace(query, `"`, `""`, -1)
-		query = `"` + query + `"`
-		queryArgs = append(queryArgs, query)
-	}
-	queryArgs = append(queryArgs, epoch)
+	queryArgs = append(queryArgs, wrapFtsQuery(query))
 	if !firstPage {
 		queryArgs = append(queryArgs, lastOrderedValue)
 		queryArgs = append(queryArgs, lastID)
@@ -313,13 +291,16 @@ func (db *sqlite3Database) QueryTorrents(
 
 func orderOn(orderBy OrderingCriteria) string {
 	switch orderBy {
+	case ByName:
+		return "name"
+
 	case ByRelevance:
 		return "idx.rank"
 
 	case ByTotalSize:
 		return "total_size"
 
-	case ByDiscoveredOn:
+	case ByDiscovered:
 		return "created_at"
 
 	case ByNFiles:
@@ -330,7 +311,7 @@ func orderOn(orderBy OrderingCriteria) string {
 	}
 }
 
-func (db *sqlite3Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error) {
+func (db *Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error) {
 	rows, err := db.conn.Query(`
 		SELECT
 			info_hash,
@@ -361,7 +342,7 @@ func (db *sqlite3Database) GetTorrent(infoHash []byte) (*TorrentMetadata, error)
 	return &tm, nil
 }
 
-func (db *sqlite3Database) GetFiles(infoHash []byte) ([]File, error) {
+func (db *Database) GetFiles(infoHash []byte) ([]File, error) {
 	rows, err := db.conn.Query(
 		"SELECT size, path FROM files, torrents WHERE files.torrent_id = torrents.id AND torrents.info_hash = ?;",
 		infoHash)
@@ -382,7 +363,7 @@ func (db *sqlite3Database) GetFiles(infoHash []byte) ([]File, error) {
 	return files, nil
 }
 
-func (db *sqlite3Database) setupDatabase() error {
+func (db *Database) setupDatabase() error {
 	// Enable Write-Ahead Logging for SQLite as "WAL provides more concurrency as readers do not
 	// block writers and a writer does not block readers. Reading and writing can proceed
 	// concurrently."
@@ -492,4 +473,13 @@ func closeRows(rows *sql.Rows) {
 	if err := rows.Close(); err != nil {
 		log.Printf("could not close row %v", err)
 	}
+}
+
+func wrapFtsQuery(query string) string {
+	// SQLite's FTS5 requires double quotes to be escaped with double quotes.
+	query = strings.Replace(query, `"`, `""`, -1)
+
+	// We enclose the user's query in double quotes to prevent SQLite from interpreting
+	// special characters like ':' as FTS5 operators.
+	return `"` + query + `"`
 }
