@@ -1,5 +1,5 @@
 # Compiled binaries
-cmd/magnetico/magnetico
+magnetico
 __debug_bin
 
 # Databases

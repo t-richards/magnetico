@@ -61,8 +61,8 @@ func Run(database persistence.Database) {
 	// Main application routes
 	router := chi.NewRouter()
 	router.Use(securityHeaders)
-	router.Get("/static/*", staticHandler)
 	router.Get("/", rootHandler(database))
+	router.Get("/static/*", staticHandler)
 	router.Get("/favicon.ico", emptyFaviconHandler)
 	router.Get("/torrents", torrentsHandler(database))
 	router.Get("/torrents/{infohash:[a-f0-9]{40}}", torrentsInfohashHandler(database))

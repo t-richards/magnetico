@@ -81,6 +81,7 @@ type torrentData struct {
 	Torrent persistence.TorrentMetadata
 	Files   []persistence.File
 	Query   string
+	Tree    Directory
 }
 
 func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
@@ -115,6 +116,7 @@ func torrentsInfohashHandler(database persistence.Database) http.HandlerFunc {
 			Torrent: *metadata,
 			Files:   files,
 			Query:   r.FormValue("query"),
+			Tree:    makeTree(files),
 		})
 		if err != nil {
 			log.Printf("while executing torrent template: %v", err)
@@ -139,6 +141,8 @@ func staticHandler(w http.ResponseWriter, r *http.Request) {
 	// Set the content type based on the file extension.
 	if strings.HasSuffix(r.URL.Path, "webp") {
 		w.Header().Set("Content-Type", "image/webp")
+	} else if strings.HasSuffix(r.URL.Path, "css") {
+		w.Header().Set("Content-Type", "text/css")
 	}
 
 	_, err = io.Copy(w, file)
