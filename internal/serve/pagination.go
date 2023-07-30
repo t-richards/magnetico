@@ -2,6 +2,7 @@ package serve
 
 type Pagination struct {
 	Current int
+	Max     int
 	Prev    *int
 	Next    *int
 	Items   []any
@@ -23,7 +24,7 @@ func Paginate(current int, max int) Pagination {
 	items := []any{1}
 
 	if current == 1 && max == 1 {
-		return Pagination{current, prev, next, items}
+		return Pagination{current, max, prev, next, items}
 	}
 	if current > 4 {
 		items = append(items, nil)
@@ -44,7 +45,7 @@ func Paginate(current int, max int) Pagination {
 		items = append(items, max)
 	}
 
-	return Pagination{current, prev, next, items}
+	return Pagination{current, max, prev, next, items}
 }
 
 func maxInt(x, y int) int {

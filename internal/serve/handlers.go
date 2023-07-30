@@ -48,9 +48,14 @@ type torrentsData struct {
 	Torrents []persistence.TorrentMetadata
 
 	// Other computed bits
-	TotalCount int
-	MaxPage    int
-	Pagination Pagination
+	ResultCount ResultCount
+	Pagination  Pagination
+}
+
+type ResultCount struct {
+	Total    int
+	StartIdx int
+	EndIdx   int
 }
 
 func torrentsHandler(database *persistence.Database) http.HandlerFunc {
@@ -68,11 +73,13 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		metadata, err := database.QueryTorrents(
+		// Pages on the UI are 1-indexed, but the database is 0-indexed.
+		offset := (page - 1) * persistence.MaxResults
+		torrents, err := database.QueryTorrents(
 			query,
 			persistence.ByRelevance,
 			true,
-			page,
+			offset,
 		)
 		if err != nil {
 			log.Printf("while fetching torrents: %v\n", err)
@@ -80,15 +87,20 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		maxPage := count / persistence.MaxResults
-		pagination := Paginate(page, maxPage)
+		pagination := Paginate(page, count*1.0/persistence.MaxResults)
+		resultCount := ResultCount{
+			Total:    count,
+			StartIdx: offset + 1,
+			EndIdx:   offset + len(torrents),
+		}
 		err = listTemplate.Execute(w, torrentsData{
-			Torrents:   metadata,
-			TotalCount: count,
-			Query:      r.FormValue("query"),
-			Page:       page,
-			Pagination: pagination,
-			MaxPage:    maxPage,
+			Query: query,
+			Page:  page,
+
+			Torrents: torrents,
+
+			Pagination:  pagination,
+			ResultCount: resultCount,
 		})
 		if err != nil {
 			log.Printf("while executing torrents template: %v", err)
@@ -100,6 +112,10 @@ func getPageNumber(r *http.Request) int {
 	page := r.FormValue("page")
 	pageNo, err := strconv.ParseInt(page, 10, 64)
 	if err != nil {
+		return 1
+	}
+
+	if pageNo < 1 {
 		return 1
 	}
 

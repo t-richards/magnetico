@@ -238,7 +238,7 @@ func (db *Database) QueryTorrents(
 	query string,
 	orderBy OrderingCriteria,
 	ascending bool,
-	page int,
+	offset int,
 ) ([]TorrentMetadata, error) {
 	// Prepare query
 	searchParams := searchPlaceholders{
@@ -246,9 +246,6 @@ func (db *Database) QueryTorrents(
 		Ascending: ascending,
 	}
 	sqlQuery := executeTemplate(searchQuery, searchParams, searchFuncs)
-
-	// Pages on the UI are 1-indexed, but the database is 0-indexed.
-	offset := (page - 1) * MaxResults
 
 	// Run query
 	rows, err := db.conn.Query(sqlQuery, wrapFtsQuery(query), MaxResults, offset)

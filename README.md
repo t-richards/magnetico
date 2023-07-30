@@ -47,6 +47,7 @@ Download the latest release from the [releases page](https://github.com/t-richar
  - [x] Add robots noindex/nofollow headers
  - [x] Pretty up the files list
  - [x] Fix pagination
+   - [ ] Can't navigate to the last page sometimes?
  - [ ] Fix sorting
  - [ ] Fix table formatting
  - [ ] Automate docker image building

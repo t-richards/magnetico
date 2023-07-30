@@ -24,7 +24,9 @@
         </form>
     </header>
     <main class="container">
-        Showing {{ .Torrents | len }} of {{ .TotalCount }} results.
+        <p class="lead">
+            Showing items {{ .ResultCount.StartIdx | comma }} to {{ .ResultCount.EndIdx | comma }} of {{ .ResultCount.Total | comma }} results.
+        </p>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -63,7 +65,7 @@
             <ul class="pagination">
                 <li class="page-item {{ if eq .Pagination.Prev nil }}disabled{{ end }}">
                     <a class="page-link" href="?query={{ $.Query }}&page={{ .Pagination.Prev }}" aria-label="Previous">
-                        <span aria-hidden="true">&laquo;</span>
+                        <i class="bi bi-arrow-left"></i>
                     </a>
                 </li>
                 {{ range .Pagination.Items }}
@@ -72,14 +74,14 @@
                     <a class="page-link" href="#" tabindex="-1" aria-disabled="true">...</a>
                 </li>
                 {{ else }}
-                <li class="page-item {{ if eq . $.Page }}active{{ end }}" {{ if eq . $.Page }}aria-current="page" {{end}}>
+                <li class="page-item {{ if eq . $.Pagination.Current }}active{{ end }}" {{ if eq . $.Pagination.Current }}aria-current="page" {{end}}>
                     <a class="page-link" href="?query={{ $.Query }}&page={{ . }}">{{ . }}</a>
                 </li>
                 {{ end }}
                 {{ end }}
                 <li class="page-item {{ if eq .Pagination.Next nil }}disabled{{ end }}">
                     <a class="page-link" href="?query={{ $.Query }}&page={{ .Pagination.Next }}" aria-label="Next">
-                        <span aria-hidden="true">&raquo;</span>
+                        <i class="bi bi-arrow-right"></i>
                     </a>
                 </li>
             </ul>
