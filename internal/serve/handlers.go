@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -87,7 +88,8 @@ func torrentsHandler(database *persistence.Database) http.HandlerFunc {
 			return
 		}
 
-		pagination := Paginate(page, count*1.0/persistence.MaxResults)
+		maxPage := int(math.Ceil(float64(count) / persistence.MaxResults))
+		pagination := Paginate(page, maxPage)
 		resultCount := ResultCount{
 			Total:    count,
 			StartIdx: offset + 1,

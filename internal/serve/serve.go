@@ -62,7 +62,7 @@ var templateFunctions = template.FuncMap{
 		tm := time.Unix(s, 0)
 		// > Format and Parse use a reference time for specifying the format.
 		// https://gobyexample.com/time-formatting-parsing
-		return tm.Format("2006-01-02 15:04:05")
+		return tm.Format("2006-01-02 15:04:05 MST")
 	},
 }
 
